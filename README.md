@@ -1,4 +1,4 @@
-# toggle_header_source.vim
+# toggle-header-source.vim
 
 Easily toggle between source and header files.
 
