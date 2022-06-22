@@ -32,8 +32,8 @@ You can set a keyboard shortcut if you want by placing something like:
 in your `~/.vimrc` file.  Yes, the `<CR>` is literally there at the end
 as the four characters shown.
 
-### Installing with Vundle
-Add `Plug 'lgulich/toggle_header_source.vim'` to your your plugin definitions
+### Installing with vim-plug
+Add `Plug 'lgulich/toggle-header-source.vim'` to your your plugin definitions
 in your `.vimrc`
 
 ## Comparison to CurtineIncSw.vim
