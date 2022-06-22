@@ -1,34 +1,63 @@
-function! FindInc()
+function! SwitchToFile(file_pattern)
+  " We try to find the matching file. Our approach is to start as close as
+  " possible (i.e. in the same folder) and then increase the search path if not
+  " found by also searching in parent folders.
   let dirname=fnamemodify(expand("%:p"), ":h")
-  let target_file=b:inc_sw
-  " At this point cmd might evaluate to something of the format:
-  " /Users/person/ . -type f -iregex ".*\/test_class.h[a-z]*" -print -quit
-  let cmd="find " . dirname . " . -type f -iregex \""  . target_file . "\" -print -quit"
-  let find_res=system(cmd)
-  if filereadable(find_res)
+
+  " Find file in same folder.
+  let cmd="find " . dirname . " -type f -iregex \""  . a:file_pattern . "\" -print -quit"
+  let target_file=system(cmd)
+  if len(target_file) > 0
+    exe "edit " target_file
     return 0
   endif
 
-  exe "e " find_res
+  " Find file in parent folder.
+  let cmd="find " . dirname . "/.. -type f -iregex \""  . a:file_pattern . "\" -print -quit"
+  let target_file=system(cmd)
+  if len(target_file) > 0
+    exe "edit " target_file
+    return 0
+  endif
+
+  " Find file in grandparent folder.
+  let cmd="find " . dirname . "/../.. -type f -iregex \""  . a:file_pattern . "\" -print -quit"
+  let target_file=system(cmd)
+  if len(target_file) > 0
+    exe "edit " target_file
+    return 0
+  endif
+
+  " Find file in grand-grandparent folder.
+  let cmd="find " . dirname . "/../../.. -type f -iregex \""  . a:file_pattern . "\" -print -quit"
+  let target_file=system(cmd)
+  if len(target_file) > 0
+    exe "edit " target_file
+    return 0
+  endif
+
+  " Find file in project root folder.
+  let cmd="find . -type f -iregex \""  . a:file_pattern . "\" -print -quit"
+  let target_file=system(cmd)
+  if len(target_file) > 0
+    exe "edit " target_file
+    return 0
+  endif
+
+  echom "Could not find matching file: " . a:file_pattern
+  return 1
 endfun
 
-function! CurtineIncSw()
-  if exists("b:inc_sw")
-    e#
-    return 0
-  endif
+function! ToggleHeaderSource()
   if match(expand("%"), '\.c') > 0
-    let b:inc_sw = substitute(".*\\\/" . expand("%:t"), '\.c\(.*\)', '.h[a-z]*', "")
+    " We are in a source file. We need to find header file.
+    let pattern_for_matching_file = substitute(".*\\\/" . expand("%:t"), '\.c\(.*\)', '.h[a-z]*', "")
   elseif match(expand("%"), "\\.h") > 0
-    let b:inc_sw = substitute(".*\\\/" . expand("%:t"), '\.h\(.*\)', '.c[a-z]*', "")
-  elseif match(expand("%"), '\.ads') > 0
-    let l:inc_sw = substitute(".*\\\/" . expand("%:t"), '\.ads\(.*\)', '.adb[a-z]*', "")
-  elseif match(expand("%"), "\\.adb") > 0
-    let l:inc_sw = substitute(".*\\\/" . expand("%:t"), '\.adb\(.*\)', '.ads[a-z]*', "")
+    " We are in a header file. We need to find source file.
+    let pattern_for_matching_file = substitute(".*\\\/" . expand("%:t"), '\.h\(.*\)', '.c[a-z]*', "")
   endif
 
-  call FindInc()
+  call SwitchToFile(pattern_for_matching_file)
 endfun
 
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
-
